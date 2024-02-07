@@ -1,39 +1,24 @@
 
-# Summary of joiner/ leavers by nationality
+# Summary of joiners by PINS
 
 ###################################Install and load the packages###################################
 #(note only need to install packages once, but need to reload library each time)
-#Working with strings package
-#install.packages ("stringr")
-library(stringr)
-
-#data wrangling/ analysis package
-library(dplyr)
-
-#Viewing data package
-library(kableExtra) 
 
 #data wrangling/ analysis package
 library(tidyverse)
 
-library(lubridate)
-
-#Dates package
-library(eeptools)
-
-#visualisation
-library(ggplot2)
 
 ###################################Set working directory and load data###################################
 #Note, you'll need to set the working directory to where the files are saved
 getwd()
+setwd("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/wf/Cross-cutting work/Brexit/Nursing/NMC PINS/ESR records with PINS")
+
+Raw_Data_y1 <- read_csv("Staff in Post - Workforce 202310 with PINS.csv")
+Raw_Data_y2 <- read_csv("Staff in Post - Workforce 202311 with PINS.csv")
+
 setwd("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data")
-
-Raw_Data_y1 <- read_csv("Staff in Post - Workforce 202303 extracted May 23.csv")
-Raw_Data_y2 <- read_csv("Staff in Post - Workforce 202310 extracted Dec 23.csv")
-
 nationality <- read_csv("Nationality groupings.csv")
-NHS_orgs <- read_csv("Org Codes NHS Digital.csv")
+NHS_orgs <- read_csv("ORG Codes NHS Digital.csv")
 
 ###################################Data wrangling###################################
 #Amend column names so the dots are replaced with spaces
@@ -134,27 +119,7 @@ Data <- Data %>%
 Data <- Data %>%
   #joiner flags
   mutate(joiner = if_else(is.na(Staff_group_y1) == TRUE & Staff_group_y2 %in% c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2, 0)) %>%
-  mutate(occ_joiner = if_else(Staff_group_y1 != "Nurse" & NHSD_trust_or_CCG_y1 == "1" & Staff_group_y2 == c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2, 0)) %>%
-  mutate(non_active_to_active = if_else(Staff_group_y1 == "Nurse" & Status_y1 != "Active" & NHSD_trust_or_CCG_y1 == "1" & Staff_group_y2 == "Nurse" & Status_y2 == "Active" & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2, 0)) %>%
-  mutate(nhs_provider_joiner = if_else(Staff_group_y1 == "Nurse" & NHSD_trust_or_CCG_y1 == "0" & Staff_group_y2 == "Nurse" & Status_y2 == "Active" & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2, 0)) %>%
-  mutate(other_joiner = if_else(Staff_group_y1 != "Nurse" & NHSD_trust_or_CCG_y1 == "0" & Staff_group_y2 == "Nurse" & Status_y2 == "Active" & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2, 0)) %>%
-  #leaver flags
-  mutate(leaver = if_else(is.na(Staff_group_y2) == TRUE & Staff_group_y1 %in% c("Nurse") & Status_y1 %in% c("Active") & NHSD_trust_or_CCG_y1 == "1", Contracted_Wte_y1*-1, 0)) %>%
-  mutate(occ_leaver = if_else(Staff_group_y2 != "Nurse" & NHSD_trust_or_CCG_y2 == "1" & Staff_group_y1 == c("Nurse") & Status_y1 %in% c("Active") & NHSD_trust_or_CCG_y1 == "1", Contracted_Wte_y1*-1, 0)) %>%
-  mutate(active_to_non_active = if_else(Staff_group_y2 == "Nurse" & Status_y2 != "Active" & NHSD_trust_or_CCG_y2 == "1" & Staff_group_y1 == c("Nurse") & Status_y1 %in% c("Active") & NHSD_trust_or_CCG_y1 == "1", Contracted_Wte_y1*-1, 0)) %>%
-  mutate(nhs_provider_leaver = if_else(Staff_group_y2 == "Nurse" & NHSD_trust_or_CCG_y2 == "0" & Staff_group_y1 == "Nurse" & Status_y1 == "Active" & NHSD_trust_or_CCG_y1 == "1", Contracted_Wte_y1*-1, 0)) %>%
-  mutate(other_leaver = if_else(Staff_group_y2 != "Nurse" & NHSD_trust_or_CCG_y2 == "0" & Staff_group_y1 == "Nurse" & Status_y1 == "Active" & NHSD_trust_or_CCG_y1 == "1", Contracted_Wte_y1*-1, 0)) %>%
-  #FTE change
-  mutate(FTE_change = if_else(Staff_group_y2 == "Nurse" & Staff_group_y1 == "Nurse" & Status_y1 == "Active" & Status_y2 == "Active" & NHSD_trust_or_CCG_y1 == "1" & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2-Contracted_Wte_y1, 0))
-
-
-
-#override NAs in joiner/ leaver flags
-Data <- Data %>%
-  mutate (nhs_provider_joiner = if_else(is.na(nhs_provider_joiner)==FALSE,nhs_provider_joiner,0)) %>%
-  mutate (other_joiner = if_else(is.na(other_joiner)==FALSE,other_joiner,0)) %>%
-  mutate (nhs_provider_leaver = if_else(is.na(nhs_provider_leaver)==FALSE,nhs_provider_leaver,0)) %>%
-  mutate (other_leaver = if_else(is.na(other_leaver)==FALSE,other_leaver,0)) #%>%
+  mutate(occ_joiner = if_else(Staff_group_y1 != "Nurse" & NHSD_trust_or_CCG_y1 == "1" & Staff_group_y2 == c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1", Contracted_Wte_y2, 0))
 
 
 #duplication check
@@ -171,161 +136,162 @@ Raw_Data_y1<- Raw_Data_y1 %>%
   mutate (Nationality_grouping_y1_v2_2=if_else(is.na(Nationality_grouping_y2_v2)==FALSE,Nationality_grouping_y2_v2,Nationality_grouping_y1_v2)) %>%
   mutate (Nationality_grouping_y1_v2=if_else(is.na(Nationality_grouping_y2)==FALSE,Nationality_grouping_y2,Nationality_grouping_y1))
 
+#Create flags for Registration info
+
+pin_data <- Data %>% filter(is.na(Registration_Number_y2) == FALSE)%>%
+  #Enforce the length of registration number has to equal 8
+  filter(str_length(Registration_Number_y2) == 8)%>%
+  #Filter only the registration numbers who begin with two numbers.
+  filter(substr(Registration_Number_y2, 1,1) %in% c(1,2,3,4,5,6,7,8,9,0))%>%
+  filter(substr(Registration_Number_y2, 2,2) %in% c(1,2,3,4,5,6,7,8,9,0))%>%
+  #Filter only the registration numbers that have a legitimate country code
+  filter(substr(Registration_Number_y2, 8,8) %in% c("A", "C", "D", "E", "N", "O", "S", "W"))%>%
+  #Filter only the registration numbers that have the correct month format
+  filter(substr(Registration_Number_y2, 3,3) %in% c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"))%>%
+  #Recode all the Reg numbers for easier groupings.
+  dplyr::mutate(country_of_training = str_sub(Registration_Number_y2,-1)) %>% 
+  dplyr::mutate(country_of_training = recode(country_of_training, 
+                                      A = "UK", 
+                                      C = "EU",
+                                      D = "UK",
+                                      E = "England",
+                                      N = "Northern Ireland",
+                                      O = "Overseas (non EU)",
+                                      S = "Scotland",
+                                      W = "Wales"
+                                      )
+  )%>%
+  #Recode the month and year 
+  dplyr::mutate(registration_year = str_sub(Registration_Number_y2, 1,2))%>%
+  dplyr::mutate(registration_month = str_sub(Registration_Number_y2, 3,3))%>%
+  dplyr::mutate(registration_month = recode(registration_month,
+                                            "A" = 01,
+                                            "B" = 02,
+                                            "C" = 03,
+                                            "D" = 04,
+                                            "E" = 05,
+                                            "F" = 06,
+                                            "G" = 07,
+                                            "H" = 08,
+                                            "I" = 09,
+                                            "J" = 10,
+                                            "K" = 11,
+                                            "L" = 12))%>%
+  #Create a new column in the format ready to be converted to a datetime
+  dplyr::mutate(registration_date = if_else(registration_year < 25, paste0(20,registration_year,"-",registration_month,"-01"),
+                                            paste0(19,registration_year,"-",registration_month,"-01")))%>%
+  select(-c(registration_month, registration_year))%>%
+  filter(joiner > 0 | occ_joiner > 0)%>%
+  #Recode the current ESR month to a numeric number
+  mutate(current_month = paste0(as.numeric(substr(Tm_Year_Month_y2,1,4)),"-",ifelse(substr(Tm_Year_Month_y2,6,8) == "JAN", 01,
+                                                                        ifelse(substr(Tm_Year_Month_y2,6,8) == "FEB", 02,
+                                                                               ifelse(substr(Tm_Year_Month_y2,6,8) == "MAR", 03,
+                                                                                      ifelse(substr(Tm_Year_Month_y2,6,8) == "APR", 04,
+                                                                                             ifelse(substr(Tm_Year_Month_y2,6,8) == "MAY", 05,
+                                                                                                    ifelse(substr(Tm_Year_Month_y2,6,8) == "JUN", 06,
+                                                                                                           ifelse(substr(Tm_Year_Month_y2,6,8) == "JUL", 07,
+                                                                                                                  ifelse(substr(Tm_Year_Month_y2,6,8) == "AUG", 08,
+                                                                                                                         ifelse(substr(Tm_Year_Month_y2,6,8) == "SEP", 09,
+                                                                                                                                ifelse(substr(Tm_Year_Month_y2,6,8) == "OCT", 10,
+                                                                                                                                       ifelse(substr(Tm_Year_Month_y2,6,8) == "NOV", 11, 12
+                                                                                                                                       ))))))))))),"-01")
+
+  )
+
+
+
+
+#Convert registration date, date of birth and current month to datetime
+pin_data$registration_date <- ymd(pin_data$registration_date)
+pin_data$Date_Of_Birth_y2 <- ymd(pin_data$Date_Of_Birth_y2)
+pin_data$current_month <- ymd(pin_data$current_month)
+
+#Filter out the registration numbers that are before the date of birth and before the current month
+Data_birth_filter <- pin_data %>% filter(Date_Of_Birth_y2 < registration_date)%>%
+  filter(registration_date <= current_month)
+
+#Set periods of 3, 6 and 12 months prior to current month to allow grouping
+months_1 <- max(Data_birth_filter$current_month) %m-% months(1)
+months_2 <- max(Data_birth_filter$current_month) %m-% months(2)
+months_3 <- max(Data_birth_filter$current_month) %m-% months(3)
+months_6 <- max(Data_birth_filter$current_month) %m-% months(6)
+months_9 <- max(Data_birth_filter$current_month) %m-% months(9)
+months_12 <- max(Data_birth_filter$current_month) %m-% months(12)
+months_24 <- max(Data_birth_filter$current_month) %m-% months(24)
+months_60 <- max(Data_birth_filter$current_month) %m-% months(60)
+
+
+
+
+#Mutate the NMC dates to time periods before joining ESR.
+Data_esr_grouped <- Data_birth_filter %>%
+  mutate(NMC_to_ESR = ifelse(registration_date == current_month, "Immediate Joiner",
+                             ifelse(registration_date >= months_1 & registration_date < current_month, "1 Month",
+                                    ifelse(months_1 > registration_date & registration_date >= months_2, " 1 to 2 Months",
+                                           ifelse(months_2 > registration_date & registration_date >= months_3, "2 to 3 Months",
+                                                  ifelse(months_3 > registration_date & registration_date >= months_6, "3 to 6 Months",
+                                                         ifelse(months_6 > registration_date & registration_date >= months_12, "6 to 12 Months",
+                                                                ifelse(months_12 > registration_date & registration_date >= months_24, "1 to 2 years",
+                                                                       ifelse(months_24 > registration_date & registration_date >= months_60, "2 to 5 years", "Over 5 years")))))))))
+                                            
+
 
 ###################################joiner/ leaver summaries###################################
-#Total joiners/ leavers
-summary <- Data %>%
+#Create total for country
+summary_totals_country <- Data_esr_grouped %>%
+  summarise(joiner = sum(joiner),
+            occ_joiner = sum(occ_joiner))%>%
+  mutate(country_of_training = "All")%>%
+  select(c(3,1,2))
+
+#Summarise for all country of training and append total onto the bottom
+summary_by_training_country <- Data_esr_grouped %>%
+  group_by(country_of_training) %>%
   summarise (joiner=sum(joiner),
-             occ_joiner=sum(occ_joiner),
-             non_active_to_active=sum(non_active_to_active),
-             nhs_provider_joiner=sum(nhs_provider_joiner),
-             other_joiner=sum(other_joiner),
-             leaver=sum(leaver),
-             occ_leaver=sum(occ_leaver),
-             active_to_non_active=sum(active_to_non_active),
-             nhs_provider_leaver=sum(nhs_provider_leaver),
-             other_leaver=sum(other_leaver),
-             FTE_change=sum(FTE_change)
-  )
+             occ_joiner=sum(occ_joiner)
+             )%>%
+  bind_rows(summary_totals_country)%>%
+  pivot_longer(c(2:3))
 
-#insert nationality column
-summary <- summary %>% mutate (Nationality_grouping="All") %>% select (12,1:11)
+#Create total for date
+summary_totals_date <- Data_esr_grouped %>%
+  summarise(joiner = sum(joiner),
+            occ_joiner = sum(occ_joiner))%>%
+  mutate(NMC_to_ESR = "All")%>%
+  select(c(3,1,2))
 
-#Split by nationality
-summary_nat <- Data %>%
-  group_by(Nationality_grouping) %>%
-  summarise (joiner=sum(joiner),
-             occ_joiner=sum(occ_joiner),
-             non_active_to_active=sum(non_active_to_active),
-             nhs_provider_joiner=sum(nhs_provider_joiner),
-             other_joiner=sum(other_joiner),
-             leaver=sum(leaver),
-             occ_leaver=sum(occ_leaver),
-             active_to_non_active=sum(active_to_non_active),
-             nhs_provider_leaver=sum(nhs_provider_leaver),
-             other_leaver=sum(other_leaver),
-             FTE_change=sum(FTE_change)
-  )
+#Create vector to sort NMC to ESR column into defined order
+date_order <- c("Immediate Joiner",
+                "1 Month",
+                "1 to 2 Months",
+                "2 to 3 Months",
+                "3 to 6 Months",
+                "6 to 12 Months",
+                "1 to 2 years",
+                "2 to 5 years",
+                "Over 5 years",
+                "All")
 
-summary_nat_group <- Data %>%
-  group_by(Nationality_grouping_v2) %>%
-  summarise (joiner=sum(joiner),
-             occ_joiner=sum(occ_joiner),
-             non_active_to_active=sum(non_active_to_active),
-             nhs_provider_joiner=sum(nhs_provider_joiner),
-             other_joiner=sum(other_joiner),
-             leaver=sum(leaver),
-             occ_leaver=sum(occ_leaver),
-             active_to_non_active=sum(active_to_non_active),
-             nhs_provider_leaver=sum(nhs_provider_leaver),
-             other_leaver=sum(other_leaver),
-             FTE_change=sum(FTE_change)
-  )
-
-#rename nationality grouping to match above summaries
-summary_nat_group <- rename (summary_nat_group, Nationality_grouping=Nationality_grouping_v2)
-
-#combine total with nat split
-summary <- bind_rows(summary_nat,summary,summary_nat_group) 
-
-#remove helper tables
-rm(summary_nat,summary_nat_group)
+#Summarise for all dates and append total onto the bottom
+summary_by_date <- Data_esr_grouped %>%
+  group_by(NMC_to_ESR) %>%
+  summarise(joiner=sum(joiner),
+            occ_joiner = sum(occ_joiner))%>%
+  bind_rows(summary_totals_date)%>%
+  pivot_longer(c(2:3))
 
 
-###################################FTE summaries###################################
-#FTE - year 1
-#total
-FTE_y1_1 <- Raw_Data_y1 %>%
-  filter(Staff_group_y1 %in% c("Nurse") & Status_y1 %in% c("Active") & NHSD_trust_or_CCG_y1 == "1") %>%
-  summarise (FTE_y1 = sum(Contracted_Wte_y1))
 
-FTE_y1_1 <- FTE_y1_1 %>% mutate (Nationality_grouping='All')
-
-#nationality split 1
-FTE_y1_2 <- Raw_Data_y1 %>%
-  filter(Staff_group_y1 %in% c("Nurse") & Status_y1 %in% c("Active") & NHSD_trust_or_CCG_y1 == "1") %>%
-  mutate (Nationality_grouping_y1 = if_else(is.na(Nationality_grouping_y1) == FALSE, Nationality_grouping_y1, 'Unknown')) %>%
-  group_by(Nationality_grouping_y1_v2) %>%
-  summarise (FTE_y1 = sum(Contracted_Wte_y1))
-
-FTE_y1_2 <- rename (FTE_y1_2, Nationality_grouping=Nationality_grouping_y1_v2)
-
-#nationality split 2
-FTE_y1_3 <- Raw_Data_y1 %>%
-  filter(Staff_group_y1 %in% c("Nurse") & Status_y1 %in% c("Active") & NHSD_trust_or_CCG_y1 == "1") %>%
-  group_by(Nationality_grouping_y1_v2_2) %>%
-  summarise (FTE_y1 = sum(Contracted_Wte_y1))
-
-FTE_y1_3 <- rename (FTE_y1_3, Nationality_grouping=Nationality_grouping_y1_v2_2)
-
-#combine all FTE
-FTE_y1 <- bind_rows(FTE_y1_2,FTE_y1_1,FTE_y1_3) 
-
-
-#FTE - year 2
-#total
-FTE_y2_1 <- Raw_Data_y2 %>%
-  filter(Staff_group_y2 %in% c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1") %>%
-  summarise (FTE_y2 = sum(Contracted_Wte_y2))
-
-FTE_y2_1 <- FTE_y2_1 %>% mutate (Nationality_grouping='All')
-
-#nationality split 1
-FTE_y2_2 <- Raw_Data_y2 %>%
-  filter(Staff_group_y2 %in% c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1") %>%
-  mutate (Nationality_grouping_y2 = if_else(is.na(Nationality_grouping_y2) == FALSE, Nationality_grouping_y2, 'Unknown')) %>%
-  group_by(Nationality_grouping_y2) %>%
-  summarise (FTE_y2 = sum(Contracted_Wte_y2))
-
-FTE_y2_2 <- rename (FTE_y2_2, Nationality_grouping=Nationality_grouping_y2)
-
-#nationality split 2
-FTE_y2_3 <- Raw_Data_y2 %>%
-  filter(Staff_group_y2 %in% c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1") %>%
-  group_by(Nationality_grouping_y2_v2) %>%
-  summarise (FTE_y2 = sum(Contracted_Wte_y2))
-
-FTE_y2_3 <- rename (FTE_y2_3, Nationality_grouping=Nationality_grouping_y2_v2)
-
-#combine all FTE
-FTE_y2 <- bind_rows(FTE_y2_2,FTE_y2_1,FTE_y2_3) 
-
-###################################Final combined summary output###################################
-#combine joiners/ leavers with FTE
-summary <- bind_cols(summary,FTE_y1,FTE_y2) %>%
-  select (1:12,14,16)
-
-#remove helper tables
-rm(FTE_y1_1,FTE_y1_2,FTE_y1_3,FTE_y2_1,FTE_y2_2,FTE_y2_3,FTE_y1,FTE_y2)
-
-#leaver rates
-summary <- summary %>%
-  mutate(leaver_rate = as.numeric(leaver)/as.numeric(FTE_y1)) %>%
-  mutate(leaver_rate_occ = (as.numeric(occ_leaver))/as.numeric(FTE_y1))
-
-#pivot data into long format
-pivot <- pivot_longer(summary, c(2:16))
-
-###################################Other summary outputs###################################
-
-#Summary for reason for leaving
-Reasonleaving <- Data %>%
-  group_by(Reason_For_Leaving_y1)%>%
-  summarise(leaver=sum(leaver))
-
-#Summary of joiners by country
-Country <- Data %>%
-  group_by(Nationality_y2)%>%
-  summarise(joiners=sum(joiner,occ_joiner))
 
 
 ###################################Pull joiner/ leaver period name###################################
-#extract joiner/ leaver period name
-pivot_final <- pivot
-colnames(pivot_final) <- c("Nationality_grouping", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
-
 ##preparing extract for nurses dashboard time series
-long_format <- pivot %>%
+summary_training_country <- summary_training_country %>%
+  mutate(Date_from = paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2])) %>%
+  mutate(Date = as.Date(paste0(substr(Date_from,13,16),"-", substr(Date_from,6,8), "-01"),"%Y-%b-%d")) %>%
+  select(1,4,2,3,5)
+
+summary_by_date <- summary_by_date %>%
   mutate(Date_from = paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2])) %>%
   mutate(Date = as.Date(paste0(substr(Date_from,13,16),"-", substr(Date_from,6,8), "-01"),"%Y-%b-%d")) %>%
   select(1,4,2,3,5)

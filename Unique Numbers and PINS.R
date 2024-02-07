@@ -11,18 +11,18 @@ setwd("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/wf/
 nov_pins <- clean_names(read_csv("Staff in Post 202311 - Workforce with PINS.csv"))
 
 #Filter to get a dataframe only containing the registration number and Unique ID ready to join.
-only_pins <- nov_pins %>% filter(is.na(registration_number) == FALSE)%>%
+only_pins <- nov_pins %>% filter(is.na(Registration_Number_y2) == FALSE)%>%
   #Enforce the length of registration number has to equal 8
-  filter(str_length(registration_number) == 8)%>%
+  filter(str_length(Registration_Number_y2) == 8)%>%
   #Filter only the registration numbers who begin with two numbers.
-  filter(substr(registration_number, 1,1) %in% c(1,2,3,4,5,6,7,8,9,0))%>%
-  filter(substr(registration_number, 2,2) %in% c(1,2,3,4,5,6,7,8,9,0))%>%
+  filter(substr(Registration_Number_y2, 1,1) %in% c(1,2,3,4,5,6,7,8,9,0))%>%
+  filter(substr(Registration_Number_y2, 2,2) %in% c(1,2,3,4,5,6,7,8,9,0))%>%
   #Filter only the registration numbers that have a legitimate country code
-  filter(substr(registration_number, 8,8) %in% c("A", "C", "D", "E", "N", "O", "S", "W"))%>%
+  filter(substr(Registration_Number_y2, 8,8) %in% c("A", "C", "D", "E", "N", "O", "S", "W", "Y", "U" ))%>%
   #Filter only the registration numbers that have the correct month format
-  filter(substr(registration_number, 3,3) %in% c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"))%>%
+  filter(substr(Registration_Number_y2, 3,3) %in% c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"))%>%
   #Select only the unique identifier and the reg number for easy joining.
-  select(c(unique_nhs_identifier, registration_number))
+  select(c(unique_nhs_identifier, Registration_Number_y2))
 
 #Make the unique nhs number columns match
 Data <- Data %>% rename(unique_nhs_identifier = Unique_Nhs_Identifier)
@@ -30,11 +30,11 @@ Data <- Data %>% rename(unique_nhs_identifier = Unique_Nhs_Identifier)
 #Join the Data dataframe only by unique NHS identifier.
 Data_test <- merge(only_pins, Data, by = "unique_nhs_identifier", all.y = TRUE)%>%
   #Find only the reg numbers that are not NA
-  filter(is.na(registration_number) == FALSE) %>%
+  filter(is.na(Registration_Number_y2) == FALSE) %>%
   #Remove duplicates
   distinct(unique_nhs_identifier, .keep_all = TRUE)%>%
   #Recode the letter indicating country
-  dplyr::mutate(home_country = str_sub(registration_number,-1)) %>% 
+  dplyr::mutate(home_country = str_sub(Registration_Number_y2,-1)) %>% 
   dplyr::mutate(home_country = recode(home_country, 
                                            A = "UK", 
                                            C = "EU",
@@ -43,11 +43,13 @@ Data_test <- merge(only_pins, Data, by = "unique_nhs_identifier", all.y = TRUE)%
                                            N = "Northern Ireland",
                                            O = "Overseas (non EU)",
                                            S = "Scotland",
-                                           W = "Wales")
+                                           W = "Wales",
+                                           Y = "Replacement PIN",
+                                           U = "Unknown")
   )%>%
   #Recode the month and year 
-  dplyr::mutate(registration_year = str_sub(registration_number, 1,2))%>%
-  dplyr::mutate(registration_month = str_sub(registration_number, 3,3))%>%
+  dplyr::mutate(registration_year = str_sub(Registration_Number_y2, 1,2))%>%
+  dplyr::mutate(registration_month = str_sub(Registration_Number_y2, 3,3))%>%
   dplyr::mutate(registration_month = recode(registration_month,
                                             A = 01,
                                             B = 02,
@@ -71,9 +73,9 @@ Data_test$Date_Of_Birth_y2 <- ymd(Data_test$Date_Of_Birth_y2)
 
 #Filter out the registration numbers that are before the date of birth
 Data_birth_filter <- Data_test %>% filter(Date_Of_Birth_y2 < registration_date)%>%
-  mutate(joiner = ifelse(joiner > 0, 1, 0))%>%
-  group_by(registration_date, joiner, occ_joiner)%>%
-  summarise(total = sum(NHSD_trust_or_CCG_y2))
+  group_by(registration_date)%>%
+  summarise(joiner = sum(joiner),
+            occ_joiner = sum(occ_joiner))
   
 
 
