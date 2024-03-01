@@ -1,3 +1,11 @@
+library(dplyr)
+library(lubridate)
+library(readr)
+library(rlang)
+library(tidyr)
+library(tidyverse)
+
+
 # Define supporting functions --------------------------------------------------
 
 wrangle_annual_data <- function(df_, df_nations_, df_orgs_, suffix_) {
@@ -79,7 +87,7 @@ calculate_pin_joiners <- function(df1_, df2_, df_nations_, df_orgs_, outdir_) {
   # Initial data wrangling -----------------------------------------------------
   
   data_y1 <- wrangle_annual_data(df1_, df_nations_, df_orgs_, "y1")
-  data_y2 <- wrangle_annual_data(df1_, df_nations_, df_orgs_, "y2")
+  data_y2 <- wrangle_annual_data(df2_, df_nations_, df_orgs_, "y2")
   
   # Remove all duplicates in Unique_Nhs_Identifier
   data_y1_dedup <- data_y1 |>
@@ -140,7 +148,7 @@ calculate_pin_joiners <- function(df1_, df2_, df_nations_, df_orgs_, outdir_) {
     mutate(
       joiner = if_else(
         is.na(.data$Staff_group_y1) &
-          .data$Staff_group_y1 == "Nurse" &
+          .data$Staff_group_y2 == "Nurse" &
           .data$Status_y2 == "Active" &
           .data$NHSD_trust_or_CCG_y2 == "1",
         .data$Contracted_Wte_y2,
@@ -311,9 +319,8 @@ calculate_pin_joiners <- function(df1_, df2_, df_nations_, df_orgs_, outdir_) {
   range_name <- full_data |>
     slice_head(n = 1) |>
     select("Tm_Year_Month_y1", "Tm_Year_Month_y2") |>
-    as.numeric() |>
     str_sub(1, 8) |>
-    paste(collapse = "to")
+    paste(collapse = " to ")
   
   # Create total for country
   summary_totals_country <- data_esr_grouped |>
