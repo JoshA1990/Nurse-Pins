@@ -1,5 +1,6 @@
-pin_joiners_function <- function() {
-  
+
+
+nqn_age_function <- function() {
   #Amend column names so the dots are replaced with spaces
   colnames(Raw_Data_y1) <- str_replace_all(colnames(Raw_Data_y1), " ", "_")
   colnames(Raw_Data_y2) <- str_replace_all(colnames(Raw_Data_y2), " ", "_")
@@ -24,13 +25,7 @@ pin_joiners_function <- function() {
   #create flags for active nurses, on both datasets, will be important depending on whether looking at joiners or leavers later
   Raw_Data_y1 <- Raw_Data_y1 %>% 
     mutate(Staff_group_y1 = if_else(substr(Occupation_Code_y1, 1, 1) %in% c(0,1,2,8,9) ,"x.Medical", 
-                                    if_else(Occupation_Code_y1 %in% c("N0A", "N0B", "N0C", "N0D", "N0E", "N0F", "N0G", "N0H", "N0J", "N0K", "N0L",
-                                                                      "N1B", "N1C", "N1H", "N1J", "N1L", "N4D", "N4F", "N4H", "N5D", "N5F", "N5H",
-                                                                      "N6A", "N6B", "N6C", "N6D", "N6E", "N6F", "N6G", "N6H", "N6J", "N6K", "N6L",
-                                                                      "N7A", "N7B", "N7C", "N7D", "N7E", "N7F", "N7G", "N7H", "N7K", "N7L", "NAA",
-                                                                      "NAB", "NAC", "NAD", "NAE", "NAF", "NAG", "NAH", "NAJ", "NAK", "NAL", "NBK",
-                                                                      "NCA", "NCB", "NCC", "NCD", "NCE", "NCF", "NCG", "NCH", "NCJ", "NCK", "NCL",
-                                                                      "NEH", "P2B", "P2E", "P2C", "P2D", "P3C", "P3D", "P3E", "N7J","P2A","P3A","N1A","NNN"), "Nurse", 
+                                    if_else(Occupation_Code_y1 %in% nurse_staff_codes, "Nurse", 
                                             if_else(Occupation_Code_y1 %in% c("N2C", "N2J", "N2L"),"x.midwife",
                                                     if_else(Occupation_Code_y1 %in% "N3H", "x.health_visitor",
                                                             if_else(Occupation_Code_y1 %in% c("H1A", "N9A", "NFA"), "Support","x.Other"))))))%>%
@@ -44,13 +39,7 @@ pin_joiners_function <- function() {
   
   Raw_Data_y2 <- Raw_Data_y2 %>%
     mutate(Staff_group_y2 = if_else(substr(Occupation_Code_y2, 1, 1) %in% c(0,1,2,8,9) ,"x.Medical", 
-                                    if_else(Occupation_Code_y2 %in% c("N0A", "N0B", "N0C", "N0D", "N0E", "N0F", "N0G", "N0H", "N0J", "N0K", "N0L",
-                                                                      "N1B", "N1C", "N1H", "N1J", "N1L", "N4D", "N4F", "N4H", "N5D", "N5F", "N5H",
-                                                                      "N6A", "N6B", "N6C", "N6D", "N6E", "N6F", "N6G", "N6H", "N6J", "N6K", "N6L",
-                                                                      "N7A", "N7B", "N7C", "N7D", "N7E", "N7F", "N7G", "N7H", "N7K", "N7L", "NAA",
-                                                                      "NAB", "NAC", "NAD", "NAE", "NAF", "NAG", "NAH", "NAJ", "NAK", "NAL", "NBK",
-                                                                      "NCA", "NCB", "NCC", "NCD", "NCE", "NCF", "NCG", "NCH", "NCJ", "NCK", "NCL",
-                                                                      "NEH", "P2B", "P2E", "P2C", "P2D", "P3C", "P3D", "P3E", "N7J","P2A","P3A","N1A","NNN"), "Nurse", 
+                                    if_else(Occupation_Code_y2 %in% nurse_staff_codes, "Nurse", 
                                             if_else(Occupation_Code_y2 %in% c("N2C", "N2J", "N2L"),"x.midwife",
                                                     if_else(Occupation_Code_y2 %in% "N3H", "x.health_visitor",
                                                             if_else(Occupation_Code_y2 %in% c("H1A", "N9A", "NFA"), "Support","x.Other"))))))%>%  
@@ -89,9 +78,7 @@ pin_joiners_function <- function() {
     mutate (Nationality_grouping_v2 = if_else(Nationality_grouping %in% c('ROW','EU'), 'IR',
                                               if_else(Nationality_grouping %in% c('UK','Unknown'),'Domestic','Other'))) %>%
     mutate (NHSD_trust_or_CCG_y1 = if_else(is.na(NHSD_trust_or_CCG_y1) == FALSE, NHSD_trust_or_CCG_y1,0)) %>% 
-    mutate (NHSD_trust_or_CCG_y2 = if_else(is.na(NHSD_trust_or_CCG_y2) == FALSE, NHSD_trust_or_CCG_y2,0)) %>%
-    #Added code for Domestic Joiners only
-    filter (Nationality_grouping_v2 == "Domestic")
+    mutate (NHSD_trust_or_CCG_y2 = if_else(is.na(NHSD_trust_or_CCG_y2) == FALSE, NHSD_trust_or_CCG_y2,0))
   
   
   #joiner/ leaver flags
@@ -100,6 +87,15 @@ pin_joiners_function <- function() {
     mutate(joiner = if_else(is.na(Staff_group_y1) == TRUE & Staff_group_y2 %in% c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1" & Contracted_Wte_y2 > 0, 1, 0)) %>%
     mutate(occ_joiner = if_else(Staff_group_y1 != "Nurse" & NHSD_trust_or_CCG_y1 == "1" & Staff_group_y2 == c("Nurse") & Status_y2 %in% c("Active") & NHSD_trust_or_CCG_y2 == "1" & Contracted_Wte_y2 > 0 , 1, 0))
   
+  #Recode ages in to age groups.
+  
+  Data <- Data %>%
+    mutate(age_group = case_when(Age_In_Years_y2 < 25 ~ "Under 25",
+                                 Age_In_Years_y2 < 35 ~ "25 to 34",
+                                 Age_In_Years_y2 < 45 ~ "35 to 44",
+                                 Age_In_Years_y2 < 55 ~ "45 to 54",
+                                 Age_In_Years_y2 < 65 ~ "55 to 64",
+                                 TRUE ~ "Over 65"))
   
   #duplication check
   Data$Unique_Nhs_Identifier[duplicated(Data$Unique_Nhs_Identifier)]
@@ -140,12 +136,12 @@ pin_joiners_function <- function() {
                                                A = "UK", 
                                                C = "EU",
                                                D = "UK",
-                                               E = "England",
-                                               N = "Northern Ireland",
+                                               E = "UK",
+                                               N = "UK",
                                                O = "Overseas (non EU)",
                                                '0' = 'Overseas (non EU)',
-                                               S = "Scotland",
-                                               W = "Wales"
+                                               S = "UK",
+                                               W = "UK"
     )
     )%>%
     #Recode the month and year 
@@ -175,6 +171,7 @@ pin_joiners_function <- function() {
                                                                                                                                                      ))))))))))),"-01")
            
     )
+  
   
   
   
@@ -222,19 +219,9 @@ pin_joiners_function <- function() {
     # Mutate the NMC dates to time periods before joining ESR
     mutate(
       NMC_to_ESR = case_when(
-        .data$registration_date == .data$current_month ~ "Immediate Joiner",
-        .data$registration_date >= months_1 ~ "1 Month",
-        .data$registration_date >= months_2 ~ "1 to 2 Months",
-        .data$registration_date >= months_3 ~ "2 to 3 Months",
-        .data$registration_date >= months_4 ~ "3 to 4 Months",
-        .data$registration_date >= months_5 ~ "4 to 5 Months",
-        .data$registration_date >= months_6 ~ "5 to 6 Months",
-        .data$registration_date >= months_7 ~ "6 to 7 Months",
-        .data$registration_date >= months_8 ~ "7 to 8 Months",
-        .data$registration_date >= months_9 ~ "8 to 9 Months",
-        .data$registration_date >= months_10 ~ "9 to 10 Months",
-        .data$registration_date >= months_11 ~ "10 to 11 Months",
-        .data$registration_date >= months_12 ~ "11 to 12 Months",
+        .data$registration_date == .data$current_month ~ "Under 6 Months",
+        .data$registration_date >= months_5 ~ "Under 6 Months",
+        .data$registration_date >= months_11 ~ "6 to 12 Months",
         .data$registration_date >= months_18 ~ "12 to 18 Months",
         .data$registration_date >= months_24 ~ "18 to 24 Months",
         .data$registration_date >= months_60 ~ "2 to 5 years",
@@ -242,48 +229,33 @@ pin_joiners_function <- function() {
         TRUE ~ "Over 10 years"
       ))
   
+  
+  # Filter only those with UK training to look at NQN transition rates
+  uk_trained_nqns <- Data_esr_grouped |>
+    filter(country_of_training == "UK" | 
+             country_of_training != "UK" & Nationality_grouping_y2 == "UK" & NMC_to_ESR %in% c("Under 6 Months", "6 to 12 Months")) |>
+    filter(Afc_Spinal_Point_y2 == 16.1 | 16)
+  
   ###########################   Joiner summaries   ##############################
-  #Create total for country
-  summary_totals_country <- Data_esr_grouped %>%
-    summarise(joiner = sum(joiner),
-              occ_joiner = sum(occ_joiner))%>%
-    mutate(country_of_training = "All")%>%
-    select(c(3,1,2))
-  
-  #Summarise for all country of training and append total onto the bottom
-  summary_by_training_country <- Data_esr_grouped %>%
-    group_by(country_of_training) %>%
-    summarise (joiner=sum(joiner),
-               occ_joiner=sum(occ_joiner)
-    )%>%
-    bind_rows(summary_totals_country)%>%
-    pivot_longer(c(2:3))
-  
-  #####
   
   
   #Create total for transition date
-  summary_totals_transition_date <- Data_esr_grouped %>%
-    summarise(joiner = sum(joiner),
-              occ_joiner = sum(occ_joiner))%>%
-    mutate(NMC_to_ESR = "All")%>%
-    select(c(3,1,2))
+  summary_total <- uk_trained_nqns |>
+    summarise(joiner = sum(joiner) + sum(occ_joiner))|>
+    mutate(NMC_to_ESR = "All") |>
+    mutate(age_group = "All")|>
+    select(3,1,2)
+  
+  
+  summary_total_transition <- uk_trained_nqns |>
+    group_by(NMC_to_ESR, age_group, .drop = FALSE) |>
+    summarise(joiner = sum(joiner) + sum(occ_joiner))
+  
   
   #Create vector to sort NMC to ESR column into defined order
   date_order <- c(
-    "Immediate Joiner",
-    "1 Month",
-    "1 to 2 Months",
-    "2 to 3 Months",
-    "3 to 4 Months",
-    "4 to 5 Months",
-    "5 to 6 Months",
-    "6 to 7 Months",
-    "7 to 8 Months",
-    "8 to 9 Months",
-    "9 to 10 Months",
-    "10 to 11 Months",
-    "11 to 12 Months",
+    "Under 6 Months",
+    "6 to 12 Months",
     "12 to 18 Months",
     "18 to 24 Months",
     "2 to 5 years",
@@ -292,52 +264,36 @@ pin_joiners_function <- function() {
     "All"
   )
   
+  age_order <- c(
+    "Under 25",
+    "25 to 34",
+    "35 to 44",
+    "45 to 54",
+    "55 to 64",
+    "Over 65",
+    "All"
+  )
+  
   #Summarise for all dates and append total onto the bottom
-  summary_by_transition_date <- Data_esr_grouped %>%
-    group_by(NMC_to_ESR) %>%
-    summarise(joiner=sum(joiner),
-              occ_joiner = sum(occ_joiner))%>%
-    bind_rows(summary_totals_transition_date)%>%
-    pivot_longer(c(2:3))%>%
-    mutate(NMC_to_ESR = factor(NMC_to_ESR, levels = date_order))%>%
-    arrange(NMC_to_ESR)
-  
-  #####
-  
-  #Summarise for registration date
-  summary_by_registration_date <- Data_esr_grouped %>%
-    group_by(registration_date) %>%
-    summarise (joiner=sum(joiner),
-               occ_joiner=sum(occ_joiner)
-    )%>%
-    pivot_longer(2:3)
-  
-  ###############################################################################
-  
+  summary <- summary_total |>
+    bind_rows(summary_total_transition) |>
+    select(3,1,2)|>
+    mutate(NMC_to_ESR = factor(NMC_to_ESR, levels = date_order))|>
+    mutate(age_group = factor(age_group, levels = age_order))|>
+    arrange(NMC_to_ESR,age_group)
   
   
   
   ###################################Pull joiner/ leaver period name###################################
-  ##preparing extract for nurses dashboard time series
   
-  #colnames(summary_by_training_country) <- c("country_of_training", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
   
-  #colnames(summary_by_transition_date) <- c("time_to_join", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
-  
-  colnames(summary_by_registration_date) <- c("registration_date", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
+  colnames(summary) <- c("NMC_to_ESR", "age_group", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
   
   ################################### Exports ###################################
   
   #export to own area with today's date
-  #write.csv(summary_by_transition_date, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC Pins/Joiners by Date/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
-  
-  #export to own area with today's date
-  #write.csv(summary_by_training_country, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC Pins/Country of Training/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
-  
-  #export to own area with today's date
-  write.csv(summary_by_registration_date, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC Pins/UK Registrations/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
+  write.csv(summary, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC PINS/NQN by age/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
   
   rm(list=ls()[! ls() %in% c("nationality","NHS_orgs")])
-  
   
 }

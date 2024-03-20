@@ -1,5 +1,4 @@
-pin_joiners_function <- function() {
-  
+domestic_joiner_pins <- function() {
   #Amend column names so the dots are replaced with spaces
   colnames(Raw_Data_y1) <- str_replace_all(colnames(Raw_Data_y1), " ", "_")
   colnames(Raw_Data_y2) <- str_replace_all(colnames(Raw_Data_y2), " ", "_")
@@ -89,9 +88,7 @@ pin_joiners_function <- function() {
     mutate (Nationality_grouping_v2 = if_else(Nationality_grouping %in% c('ROW','EU'), 'IR',
                                               if_else(Nationality_grouping %in% c('UK','Unknown'),'Domestic','Other'))) %>%
     mutate (NHSD_trust_or_CCG_y1 = if_else(is.na(NHSD_trust_or_CCG_y1) == FALSE, NHSD_trust_or_CCG_y1,0)) %>% 
-    mutate (NHSD_trust_or_CCG_y2 = if_else(is.na(NHSD_trust_or_CCG_y2) == FALSE, NHSD_trust_or_CCG_y2,0)) %>%
-    #Added code for Domestic Joiners only
-    filter (Nationality_grouping_v2 == "Domestic")
+    mutate (NHSD_trust_or_CCG_y2 = if_else(is.na(NHSD_trust_or_CCG_y2) == FALSE, NHSD_trust_or_CCG_y2,0))
   
   
   #joiner/ leaver flags
@@ -140,12 +137,12 @@ pin_joiners_function <- function() {
                                                A = "UK", 
                                                C = "EU",
                                                D = "UK",
-                                               E = "England",
-                                               N = "Northern Ireland",
+                                               E = "UK",
+                                               N = "UK",
                                                O = "Overseas (non EU)",
                                                '0' = 'Overseas (non EU)',
-                                               S = "Scotland",
-                                               W = "Wales"
+                                               S = "UK",
+                                               W = "UK"
     )
     )%>%
     #Recode the month and year 
@@ -175,6 +172,7 @@ pin_joiners_function <- function() {
                                                                                                                                                      ))))))))))),"-01")
            
     )
+  
   
   
   
@@ -242,24 +240,8 @@ pin_joiners_function <- function() {
         TRUE ~ "Over 10 years"
       ))
   
+  
   ###########################   Joiner summaries   ##############################
-  #Create total for country
-  summary_totals_country <- Data_esr_grouped %>%
-    summarise(joiner = sum(joiner),
-              occ_joiner = sum(occ_joiner))%>%
-    mutate(country_of_training = "All")%>%
-    select(c(3,1,2))
-  
-  #Summarise for all country of training and append total onto the bottom
-  summary_by_training_country <- Data_esr_grouped %>%
-    group_by(country_of_training) %>%
-    summarise (joiner=sum(joiner),
-               occ_joiner=sum(occ_joiner)
-    )%>%
-    bind_rows(summary_totals_country)%>%
-    pivot_longer(c(2:3))
-  
-  #####
   
   
   #Create total for transition date
@@ -267,7 +249,8 @@ pin_joiners_function <- function() {
     summarise(joiner = sum(joiner),
               occ_joiner = sum(occ_joiner))%>%
     mutate(NMC_to_ESR = "All")%>%
-    select(c(3,1,2))
+    mutate(country_of_training = "All")|>
+    select(4,3,1,2)
   
   #Create vector to sort NMC to ESR column into defined order
   date_order <- c(
@@ -294,50 +277,23 @@ pin_joiners_function <- function() {
   
   #Summarise for all dates and append total onto the bottom
   summary_by_transition_date <- Data_esr_grouped %>%
-    group_by(NMC_to_ESR) %>%
+    group_by(country_of_training, NMC_to_ESR,.drop = FALSE) %>%
     summarise(joiner=sum(joiner),
               occ_joiner = sum(occ_joiner))%>%
     bind_rows(summary_totals_transition_date)%>%
-    pivot_longer(c(2:3))%>%
-    mutate(NMC_to_ESR = factor(NMC_to_ESR, levels = date_order))%>%
-    arrange(NMC_to_ESR)
-  
-  #####
-  
-  #Summarise for registration date
-  summary_by_registration_date <- Data_esr_grouped %>%
-    group_by(registration_date) %>%
-    summarise (joiner=sum(joiner),
-               occ_joiner=sum(occ_joiner)
-    )%>%
-    pivot_longer(2:3)
-  
-  ###############################################################################
-  
-  
+    pivot_longer(c(3:4))|>
+    arrange(name)
   
   
   ###################################Pull joiner/ leaver period name###################################
-  ##preparing extract for nurses dashboard time series
   
-  #colnames(summary_by_training_country) <- c("country_of_training", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
   
-  #colnames(summary_by_transition_date) <- c("time_to_join", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
-  
-  colnames(summary_by_registration_date) <- c("registration_date", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
+  colnames(summary_by_transition_date) <- c("country_of_training", "time_to_join", "name", paste(substr(Data$Tm_Year_Month_y1,1,8)[1],"to",substr(Data$Tm_Year_Month_y2,1,8)[2]))
   
   ################################### Exports ###################################
   
   #export to own area with today's date
-  #write.csv(summary_by_transition_date, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC Pins/Joiners by Date/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
-  
-  #export to own area with today's date
-  #write.csv(summary_by_training_country, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC Pins/Country of Training/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
-  
-  #export to own area with today's date
-  write.csv(summary_by_registration_date, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC Pins/UK Registrations/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
+  write.csv(summary_by_transition_date, paste0("C:/Users/Josh.Andrews/OneDrive - Department of Health and Social Care/Nurse Data/Outputs/NMC PINS/Domestic Joiners/",substr(Data$Tm_Year_Month_y2,1,8)[1],".csv"))
   
   rm(list=ls()[! ls() %in% c("nationality","NHS_orgs")])
-  
-  
 }
